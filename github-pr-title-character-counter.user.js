@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.0.0
+// @version      1.0.1
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
@@ -9,7 +9,7 @@
 // @grant        none
 // ==/UserScript==
 
-const inputs = document.querySelectorAll('input[aria-label="Title"]');
+const inputs = document.querySelectorAll('input[aria-label="Title"], input[aria-label="Pull Request title"]');
 
 for (const input of inputs) {
   const counter = document.createElement('span');
