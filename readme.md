@@ -18,11 +18,11 @@ This userscript adds links to themoviedb.org on IMDb pages:
 
 The delivery service mjam.net in Austria has an incredibly bad UX, with only a tiny vertical slice in the UI being scrollable in the cart area showing your items on the right:
 
-<video src="refined-mjam-net-before.mp4" />
+<video src="https://github.com/karlhorky/userscripts/raw/main/refined-mjam-net-before.mp4"></video>
 
 `refined-mjam-net` removes the `overflow: hidden` and `height` on this area and reduces the size of other items eating vertical space:
 
-<video src="refined-mjam-net-after.mp4" />
+<video src="https://github.com/karlhorky/userscripts/raw/main/refined-mjam-net-after.mp4"></video>
 
 ## Additional Scripts
 
