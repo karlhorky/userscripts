@@ -1,13 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "eslint-config-upleveled/tsconfig.base.json",
-  "compilerOptions": {
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
-  },
   "include": [
     "**/.eslintrc.cjs",
     "**/*.ts",
@@ -15,7 +8,6 @@
     "**/*.js",
     "**/*.jsx",
     "**/*.cjs",
-    "**/*.mjs",
-    ".next/types/**/*.ts"
+    "**/*.mjs"
   ]
 }
