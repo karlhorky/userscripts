@@ -67,6 +67,7 @@ const options = {
   matchCaseSensitive: false,
   highlightStylesObject: {
     'background-color': 'rgba(255,255,0,1)', // yellow 100%
+    color: 'rgba(0,0,0,1)', // black 100%
   },
   enableScrollMarkers: true,
   scrollMarkersDebounce: 0,
