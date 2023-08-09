@@ -1,9 +1,11 @@
+// @ts-check
+
 // ==UserScript==
 // @name         Highlight All Occurrences of Selected Text
 // @description  Highlight all occurrences of any text that has been selected on the page
 // @author       James Wilson, Karl Horky
 // @namespace    https://www.karlhorky.com/
-// @version      1.3.3
+// @version      2.0.0
 // @match        https://*/*
 // @match        http://*/*
 // @grant        none
@@ -23,304 +25,452 @@
 //
 // Donate on PayPal to James Wilson: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=L5G6ATNAMJHC4&currency_code=USD
 
-const options = {
-  isSelectionValid: function ({ selectionString, selection }) {
-    return (
-      selectionString.length >= 2 &&
-      selection.type !== 'None' &&
-      selection.type !== 'Caret'
-    );
-  },
-  isWindowLocationValid: function (windowLocation) {
-    const blacklistedHosts = [
-      'localhost',
-      'linkedin.com',
-      'collabedit.com',
-      'coderpad.io',
-      'jsbin.com',
-      'plnkr.co',
-      'codesandbox.io',
-      'replit.com',
-      'youtube.com',
-      'notion.so',
-      'github1s.com',
-      'track.toggl.com',
-      'app.sqldbm.com',
-      'github.dev',
-    ];
-    return !blacklistedHosts.some((h) => windowLocation.host.includes(h));
-  },
-  areKeysPressed: function (pressedKeys = []) {
-    // return pressedKeys.includes('Meta'); // CMD key
-    // return pressedKeys.includes('Alt'); // Option key
-    return true;
-  },
-  occurrenceRegex: function (selectionString) {
-    return new RegExp(selectionString, 'i'); // partial word, case insensitive
-    // return new RegExp(selectionString); // partial word, case sensitive
-    // return new RegExp(`\\b${selectionString}\\b`, 'i'); // whole word, case insensitive
-    // return new RegExp(`\\b${selectionString}\\b`); // whole word, case sensitive
-  },
-  isAncestorNodeValid: function isAncestorNodeValid(ancestorNode) {
-    return (
-      !ancestorNode ||
-      ((!ancestorNode.classList ||
-        !ancestorNode.classList.contains('CodeMirror')) &&
-        ancestorNode.nodeName !== 'SCRIPT' &&
-        ancestorNode.nodeName !== 'STYLE' &&
-        ancestorNode.nodeName !== 'HEAD' &&
-        ancestorNode.nodeName !== 'TITLE' &&
-        ancestorNode.nodeName !== 'INPUT' &&
-        ancestorNode.nodeName !== 'TEXTAREA' &&
-        ancestorNode.contentEditable !== 'true' &&
-        isAncestorNodeValid(ancestorNode.parentNode))
-    );
-  },
-  trimRegex: function () {
-    // leading, selectionString, trailing
-    // trim parts maintained for offset analysis
-    return /^(\s*)(\S+(?:\s+\S+)*)(\s*)$/;
-  },
-  highlightedClassName: 'highlighted_selection',
-  styles: {
-    backgroundColor: 'rgb(255,255,0,1)', // yellow 100%
-    margin: '0',
-    padding: '0',
-    lineHeight: '1',
-    // display: 'inline',
-  },
-  areScrollMarkersEnabled: function () {
-    return true;
-  },
-  scrollMarkerClassName: 'highlighted_selection_scroll_marker',
-  scrollMarkerStyles: function ({ window, document, highlightedNode }) {
-    const clientRect = highlightedNode.getBoundingClientRect();
-    if (!clientRect.width || !clientRect.height) {
-      return false;
-    }
+// -----------------------------------------
+//               sync options
+// -----------------------------------------
 
-    return {
-      height: '2px',
-      width: '16px',
-      boxSizing: 'content-box',
-      border: '1px solid grey',
-      position: 'fixed',
-      top:
-        // window height times percent of element position in document
-        (window.innerHeight *
-          (+window.scrollY +
-            clientRect.top +
-            0.5 * (clientRect.top - clientRect.bottom))) /
-          document.body.clientHeight +
-        'px',
-      right: '0px',
-      backgroundColor: 'yellow',
-      zIndex: '2147483647',
-    };
+/**
+ * @typedef {{
+ *   minSelectionString: number;
+ *   denyListedHosts: Array<Location["host"]>;
+ *   gateKeys: Array<KeyboardEvent["key"]>; // 'Meta' CMD, 'Alt' Option
+ *   matchWholeWord: boolean;
+ *   matchCaseSensitive: boolean;
+ *   highlightStylesObject: {
+ *     [styleProperty: string]: string;
+ *   };
+ *   enableScrollMarkers: boolean;
+ *   scrollMarkersDebounce: number;
+ * }} Options
+ */
+
+const options = {
+  minSelectionString: 1,
+  denyListedHosts: [
+    'localhost',
+    'linkedin.com',
+    'collabedit.com',
+    'coderpad.io',
+    'jsbin.com',
+    'plnkr.co',
+    'codesandbox.io',
+    'replit.com',
+    'youtube.com',
+    'notion.so',
+    'github1s.com',
+    'track.toggl.com',
+    'app.sqldbm.com',
+    'github.dev',
+  ],
+  gateKeys: [], // 'Meta' CMD, 'Alt' Option
+  matchWholeWord: false,
+  matchCaseSensitive: false,
+  highlightStylesObject: {
+    'background-color': 'rgba(255,255,0,1)', // yellow 100%
   },
+  enableScrollMarkers: true,
+  scrollMarkersDebounce: 0,
 };
 
-const highlightedMarkTemplate = document.createElement('mark');
-highlightedMarkTemplate.className = options.highlightedClassName;
-Object.entries(options.styles).forEach(([styleName, styleValue]) => {
-  highlightedMarkTemplate.style[styleName] = styleValue;
-});
-
-const pressedKeys = [];
-document.addEventListener('keydown', (e) => {
-  const index = pressedKeys.indexOf(e.key);
-  if (index === -1) {
-    pressedKeys.push(e.key);
-  }
-});
-document.addEventListener('keyup', (e) => {
-  const index = pressedKeys.indexOf(e.key);
-  if (index !== -1) {
-    pressedKeys.splice(index, 1);
-  }
-});
-window.addEventListener('blur', (e) => {
-  pressedKeys.splice(0, pressedKeys.length);
-});
-
-document.addEventListener('selectionchange', onSelectionChange);
-
-let latestStartTime = null;
-function onSelectionChange(e) {
-  latestStartTime = performance.now();
-
-  if (!options.isWindowLocationValid(window.location)) return;
-  if (!options.areKeysPressed(pressedKeys)) return;
-
-  document
-    .querySelectorAll('.' + options.highlightedClassName)
-    .forEach((element) => {
-      const parent = element.parentNode;
-      if (parent) {
-        parent.replaceChild(new Text(element.textContent || ''), element);
-        parent.normalize();
-      }
-    });
-  if (options.areScrollMarkersEnabled()) {
-    document
-      .querySelectorAll('.' + options.scrollMarkerClassName)
-      .forEach((element) => {
-        document.body.removeChild(element);
-      });
-  }
-
-  highlight(latestStartTime);
+// -----------------------------------------
+//                helpers
+// -----------------------------------------
+/**
+ * @param {string | undefined} selectionString
+ * @param {Selection} selection
+ * @returns {selectionString is string}
+ */
+function isSelectionValid(selectionString, selection) {
+  return Boolean(
+    selectionString &&
+      selectionString.length >= options.minSelectionString &&
+      selection.type !== 'None' &&
+      selection.type !== 'Caret',
+  );
 }
 
-function highlight(startTime) {
-  const selection = document.getSelection();
-  const trimmedSelection = String(selection).match(options.trimRegex());
+function isWindowLocationValid(/** @type {Location} */ windowLocation) {
+  // no deny listed hosts in window.location.host
+  return !options.denyListedHosts.some((denyListedHost) =>
+    windowLocation.host.includes(denyListedHost),
+  );
+}
+
+function areKeysPressed(
+  /** @type {KeyboardEvent["key"][]} */ pressedKeys = [],
+) {
+  // no gate keys not pressed
+  return !options.gateKeys.some((gateKey) => !pressedKeys.includes(gateKey));
+}
+
+/**
+ * for matching occurences with whole word and case sensitive options
+ */
+function occurrenceRegex(/** @type {string} */ selectionString) {
+  return new RegExp(
+    options.matchWholeWord ? `\\b${selectionString}\\b` : selectionString,
+    options.matchCaseSensitive ? 'g' : 'ig',
+  );
+}
+/**
+ *
+ * @param {ParentNode | null} ancestorNode
+ * @returns {boolean}
+ */
+function isAncestorNodeValid(ancestorNode) {
+  return (
+    !ancestorNode ||
+    (ancestorNode.nodeName !== 'SCRIPT' &&
+      ancestorNode.nodeName !== 'STYLE' &&
+      ancestorNode.nodeName !== 'HEAD' &&
+      ancestorNode.nodeName !== 'TITLE' &&
+      isAncestorNodeValid(ancestorNode.parentNode))
+  );
+}
+
+/**
+ * leading, selectionString, trailing
+ *
+ * trim parts maintained for offset analysis
+ */
+function trimRegex() {
+  return /^(\s*)(\S+(?:\s+\S+)*)(\s*)$/;
+}
+
+function highlightName() {
+  return 'selection_highlighter_highlighted_selection';
+}
+
+// function highlightStyles() {
+//   return options.highlightStylesObject;
+// }
+
+function areScrollMarkersEnabled() {
+  return options.enableScrollMarkers;
+}
+
+function scrollMarkersDebounce() {
+  return options.scrollMarkersDebounce;
+}
+
+// function scrollMarkersCanvasClassName() {
+//   return 'selection_highlighter_scroll_markers';
+// }
+
+/**
+ * @typedef {Selection & {
+ *   anchorNode: Node;
+ *   focusNode: Node;
+ * }} SelectionWithAnchorAndFocusNodes
+ */
+
+/**
+ * @param {Selection | null} selection
+ * @returns {selection is SelectionWithAnchorAndFocusNodes}
+ */
+function isSelectionWithAnchorAndFocusNodes(selection) {
+  return !!selection && !!selection.anchorNode && !!selection.focusNode;
+}
+
+/** @type {string[]} */
+let pressedKeys = [];
+
+/** @type {CanvasRenderingContext2D} */
+let scrollMarkersCanvasContext;
+function highlightStyles() {
+  return options.highlightStylesObject;
+}
+function addStyleElement() {
+  const style = document.createElement('style');
+  style.textContent = `
+    ::highlight(${highlightName()}) {
+      ${Object.entries(highlightStyles())
+        .map(([styleName, styleValue]) => `${styleName}: ${styleValue};`)
+        .join('\n      ')}
+    }
+    .${scrollMarkersCanvasClassName()} {
+      pointer-events: none;
+      position: fixed;
+      z-index: 2147483647;
+      top: 0;
+      right: 0;
+      width: 16px;
+      height: 100vh;
+    }
+  `;
+  return /** @type {Promise<void>} */ (
+    new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        document.body.appendChild(style);
+        resolve();
+      });
+    })
+  );
+}
+function scrollMarkersCanvasClassName() {
+  return 'selection_highlighter_scroll_markers';
+}
+function addScrollMarkersCanvas() {
+  const scrollMarkersCanvas = document.createElement('canvas');
+  scrollMarkersCanvas.className = scrollMarkersCanvasClassName();
+  scrollMarkersCanvas.width = 16 * devicePixelRatio || 1;
+  scrollMarkersCanvas.height = window.innerHeight * devicePixelRatio || 1;
+
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(() => {
+      scrollMarkersCanvas.height = window.innerHeight * devicePixelRatio || 1;
+    });
+  });
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      document.body.appendChild(scrollMarkersCanvas);
+      resolve(scrollMarkersCanvas.getContext('2d'));
+    });
+  });
+}
+
+function addPressedKeysListeners() {
+  /** @type {KeyboardEvent['key'][]} */
+  const pressedKeysInner = [];
+  document.addEventListener('keydown', (e) => {
+    const index = pressedKeysInner.indexOf(e.key);
+    if (index === -1) {
+      pressedKeysInner.push(e.key);
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    const index = pressedKeysInner.indexOf(e.key);
+    if (index !== -1) {
+      pressedKeysInner.splice(index, 1);
+    }
+  });
+  window.addEventListener('blur', () => {
+    pressedKeysInner.splice(0, pressedKeysInner.length);
+  });
+  return pressedKeysInner;
+}
+
+async function init() {
+  await addStyleElement();
+  scrollMarkersCanvasContext = await addScrollMarkersCanvas();
+  pressedKeys = addPressedKeysListeners();
+  document.addEventListener('selectstart', onSelectStart);
+  document.addEventListener('selectionchange', onSelectionChange);
+}
+
+init().catch((error) => {
+  console.error(error);
+});
+
+/** @ts-ignore this is a new API */
+// eslint-disable-next-line no-undef
+const highlights = new Highlight();
+/** @ts-ignore this is a new API */
+CSS.highlights.set(highlightName(), highlights);
+
+let isNewSelection = false;
+/** @type {string} */
+let lastSelectionString;
+let latestRunNumber = 0;
+/** @type {number} */
+let drawMarkersTimeout;
+function onSelectStart() {
+  isNewSelection = true;
+}
+function onSelectionChange() {
+  const selectionString = window.getSelection() + '';
+  if (!isNewSelection) {
+    if (selectionString === lastSelectionString) {
+      return;
+    }
+  }
+  isNewSelection = false;
+  lastSelectionString = selectionString;
+  const runNumber = ++latestRunNumber;
+
+  if (!isWindowLocationValid(window.location)) return;
+  if (!areKeysPressed(pressedKeys)) return;
+
+  highlights.clear();
+  highlight(runNumber);
+
+  requestAnimationFrame(() => {
+    scrollMarkersCanvasContext.clearRect(
+      0,
+      0,
+      scrollMarkersCanvasContext.canvas.width,
+      scrollMarkersCanvasContext.canvas.height,
+    );
+  });
+  clearTimeout(drawMarkersTimeout);
+  drawMarkersTimeout = window.setTimeout(() => {
+    drawScrollMarkers(runNumber);
+  }, scrollMarkersDebounce());
+}
+
+function highlight(/** @type {number} */ runNumber) {
+  const selection = /** @type {SelectionWithAnchorAndFocusNodes} */ (
+    window.getSelection()
+  );
+  if (!isSelectionWithAnchorAndFocusNodes(selection)) return;
+
+  const trimmedSelection = String(selection).match(trimRegex());
   if (!trimmedSelection) return;
 
-  const leadingSpaces = trimmedSelection[1];
-  const selectionString = trimmedSelection[2];
-  const trailingSpaces = trimmedSelection[3];
-  if (!options.isSelectionValid({ selectionString, selection })) return;
+  const leadingSpaces = /** @type {string} */ (trimmedSelection[1]);
+  const selectionString = /** @type {string} */ (trimmedSelection[2]);
+  const trailingSpaces = /** @type {string} */ (trimmedSelection[3]);
+  if (!isSelectionValid(selectionString, selection)) return;
 
   // https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
-  const occurrenceRegex = options.occurrenceRegex(
-    selectionString.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'),
+  const regex = occurrenceRegex(
+    selectionString.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'),
   );
 
-  const allTextNodes = [];
   const treeWalker = document.createTreeWalker(
     document.body,
     NodeFilter.SHOW_TEXT,
     null,
-    false,
   );
-  while (treeWalker.nextNode()) {
-    allTextNodes.push(treeWalker.currentNode);
-  }
-
-  for (let i = 0; i < allTextNodes.length; i++) {
-    const textNode = allTextNodes[i];
-    const parent = textNode.parentNode;
-    const highlightedNodes = highlightOccurrences(textNode);
-    if (highlightedNodes) {
-      if (parent) parent.normalize();
+  /** @type {RegExpExecArray | null} */
+  let match;
+  while (treeWalker.nextNode() && runNumber === latestRunNumber) {
+    if (!(treeWalker.currentNode instanceof Text)) continue;
+    while ((match = regex.exec(treeWalker.currentNode.data))) {
+      highlightOccurrences(treeWalker.currentNode);
     }
   }
 
-  if (options.areScrollMarkersEnabled()) {
-    requestAnimationFrame(() => {
-      if (startTime !== latestStartTime) return;
-
-      const highlighted = document.querySelectorAll(
-        '.' + options.highlightedClassName,
-      );
-      const scrollMarkersFragment = document.createDocumentFragment();
-
-      for (let i = 0; i < highlighted.length; i++) {
-        setTimeout(() => {
-          if (startTime !== latestStartTime) return;
-
-          const highlightedNode = highlighted[i];
-          const scrollMarker = document.createElement('div');
-          scrollMarker.className = options.scrollMarkerClassName;
-          const scrollMarkerStyles = options.scrollMarkerStyles({
-            window,
-            document,
-            highlightedNode,
-          });
-          if (scrollMarkerStyles) {
-            Object.entries(scrollMarkerStyles).forEach(
-              ([styleName, styleValue]) => {
-                scrollMarker.style[styleName] = styleValue;
-              },
-            );
-            scrollMarkersFragment.appendChild(scrollMarker);
-          }
-        }, 0);
-      }
-
-      setTimeout(() => {
-        if (startTime === latestStartTime) {
-          document.body.appendChild(scrollMarkersFragment);
-        }
-      }, 0);
-    });
-  }
-
+  /**
+   * @param {Text} textNode
+   */
   function highlightOccurrences(textNode) {
-    const match = occurrenceRegex.exec(textNode.data);
+    if (!isAncestorNodeValid(textNode.parentNode)) return;
     if (!match) return;
-    if (!options.isAncestorNodeValid(textNode.parentNode)) return;
 
     const matchIndex = match.index;
     const anchorToFocusDirection = selection.anchorNode.compareDocumentPosition(
       selection.focusNode,
     );
-    const isUsersSelection =
-      anchorToFocusDirection & Node.DOCUMENT_POSITION_FOLLOWING
-        ? (textNode === selection.anchorNode &&
-            ((selection.anchorNode.nodeType === Node.ELEMENT_NODE &&
+
+    function isSelectionAcrossNodesLeftToRight() {
+      return anchorToFocusDirection & Node.DOCUMENT_POSITION_FOLLOWING;
+    }
+
+    function isSelectionAcrossNodesRightToLeft() {
+      return anchorToFocusDirection & Node.DOCUMENT_POSITION_PRECEDING;
+    }
+
+    function isUsersSelection() {
+      if (isSelectionAcrossNodesLeftToRight()) {
+        if (textNode === selection.anchorNode) {
+          return (
+            (selection.anchorNode.nodeType === Node.ELEMENT_NODE &&
               selection.anchorOffset === 0) ||
-              selection.anchorOffset === matchIndex - leadingSpaces.length)) ||
-          (textNode === selection.focusNode &&
-            ((selection.focusNode.nodeType === Node.ELEMENT_NODE &&
+            selection.anchorOffset <= matchIndex - leadingSpaces.length
+          );
+        } else if (textNode === selection.focusNode) {
+          return (
+            (selection.focusNode.nodeType === Node.ELEMENT_NODE &&
               selection.focusOffset === 0) ||
-              selection.focusOffset ===
-                matchIndex + selectionString.length + trailingSpaces.length)) ||
-          (textNode !== selection.anchorNode &&
-            textNode !== selection.focusNode &&
+            selection.focusOffset >=
+              matchIndex + selectionString.length + trailingSpaces.length
+          );
+        } else {
+          return (
             selection.anchorNode.compareDocumentPosition(textNode) &
               Node.DOCUMENT_POSITION_FOLLOWING &&
             selection.focusNode.compareDocumentPosition(textNode) &
-              Node.DOCUMENT_POSITION_PRECEDING)
-        : anchorToFocusDirection & Node.DOCUMENT_POSITION_PRECEDING
-        ? (textNode === selection.anchorNode &&
-            ((selection.anchorNode.nodeType === Node.ELEMENT_NODE &&
+              Node.DOCUMENT_POSITION_PRECEDING
+          );
+        }
+      } else if (isSelectionAcrossNodesRightToLeft()) {
+        if (textNode === selection.anchorNode) {
+          return (
+            (selection.anchorNode.nodeType === Node.ELEMENT_NODE &&
               selection.anchorOffset === 0) ||
-              (selection.anchorNode.nodeType === Node.TEXT_NODE &&
-                selection.anchorOffset ===
-                  matchIndex +
-                    selectionString.length +
-                    trailingSpaces.length))) ||
-          (textNode === selection.focusNode &&
-            ((selection.focusNode.nodeType === Node.ELEMENT_NODE &&
+            selection.anchorOffset >=
+              matchIndex + selectionString.length + trailingSpaces.length
+          );
+        } else if (textNode === selection.focusNode) {
+          return (
+            (selection.focusNode.nodeType === Node.ELEMENT_NODE &&
               selection.focusOffset === 0) ||
-              selection.focusOffset === matchIndex - leadingSpaces.length)) ||
-          (textNode !== selection.anchorNode &&
-            textNode !== selection.focusNode &&
+            selection.focusOffset <= matchIndex - leadingSpaces.length
+          );
+        } else {
+          return (
             selection.anchorNode.compareDocumentPosition(textNode) &
               Node.DOCUMENT_POSITION_PRECEDING &&
             selection.focusNode.compareDocumentPosition(textNode) &
-              Node.DOCUMENT_POSITION_FOLLOWING)
-        : (selection.anchorOffset < selection.focusOffset &&
+              Node.DOCUMENT_POSITION_FOLLOWING
+          );
+        }
+      } else {
+        if (selection.anchorOffset < selection.focusOffset) {
+          return (
             textNode === selection.anchorNode &&
-            selection.anchorOffset === matchIndex - leadingSpaces.length) ||
-          (selection.anchorOffset > selection.focusOffset &&
+            selection.anchorOffset <= matchIndex - leadingSpaces.length &&
+            selection.focusOffset >=
+              matchIndex + selectionString.length + trailingSpaces.length
+          );
+        } else if (selection.anchorOffset > selection.focusOffset) {
+          return (
             textNode === selection.focusNode &&
-            selection.focusOffset === matchIndex - leadingSpaces.length);
-    if (!isUsersSelection) {
-      const trimmedTextNode = textNode.splitText(matchIndex);
-      const remainingTextNode = trimmedTextNode.splitText(
-        selectionString.length,
-      );
-      const highlightedNode = highlightedMarkTemplate.cloneNode(true);
-      highlightedNode.appendChild(trimmedTextNode.cloneNode(true));
+            selection.focusOffset <= matchIndex - leadingSpaces.length &&
+            selection.anchorOffset >=
+              matchIndex + selectionString.length + trailingSpaces.length
+          );
+        }
+      }
+    }
 
-      const parent = trimmedTextNode.parentNode;
-      if (parent) parent.replaceChild(highlightedNode, trimmedTextNode);
+    if (!isUsersSelection()) {
+      const range = new Range();
+      range.selectNode(textNode);
+      range.setStart(textNode, matchIndex);
+      range.setEnd(textNode, matchIndex + selectionString.length);
+      highlights.add(range);
+    }
+  }
+}
 
-      const otherHighlightedNodes =
-        highlightOccurrences(remainingTextNode) || [];
-      return [highlightedNode].concat(otherHighlightedNodes);
-    } else {
-      const clonedNode = textNode.cloneNode();
-      const remainingClonedTextNode = clonedNode.splitText(
-        matchIndex + selectionString.length,
-      );
-      if (occurrenceRegex.exec(remainingClonedTextNode.data))
-        return highlightOccurrences(
-          textNode.splitText(matchIndex + selectionString.length),
-        );
+function drawScrollMarkers(/** @type {number} */ runNumber) {
+  if (areScrollMarkersEnabled()) {
+    for (const highlightedNode of highlights) {
+      // eslint-disable-next-line no-loop-func -- From original script
+      requestAnimationFrame(() => {
+        const dpr = devicePixelRatio || 1;
+        if (runNumber === latestRunNumber) {
+          const clientRect = highlightedNode.getBoundingClientRect();
+          if (!clientRect.width || !clientRect.height) return false;
+
+          // window height times percent of element position in document
+          const top =
+            (window.innerHeight *
+              (document.documentElement.scrollTop +
+                clientRect.top +
+                0.5 * (clientRect.top - clientRect.bottom))) /
+            document.documentElement.scrollHeight;
+
+          scrollMarkersCanvasContext.beginPath();
+          scrollMarkersCanvasContext.lineWidth = 1 * dpr;
+          scrollMarkersCanvasContext.strokeStyle = 'grey';
+          scrollMarkersCanvasContext.fillStyle = 'yellow';
+          scrollMarkersCanvasContext.strokeRect(
+            0.5 * dpr,
+            (top + 0.5) * dpr,
+            15 * dpr,
+            3 * dpr,
+          );
+          scrollMarkersCanvasContext.fillRect(
+            1 * dpr,
+            (top + 1) * dpr,
+            14 * dpr,
+            2 * dpr,
+          );
+        }
+      });
     }
   }
 }
