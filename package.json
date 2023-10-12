@@ -6,7 +6,7 @@
   "author": "Karl Horky",
   "type": "module",
   "devDependencies": {
-    "eslint-config-upleveled": "5.0.5",
+    "eslint-config-upleveled": "5.1.0",
     "typescript": "5.2.2"
   }
 }
