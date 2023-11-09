@@ -5,7 +5,7 @@
 // @author      ludios
 // @license     AGPL-3.0; https://www.gnu.org/licenses/agpl-3.0.en.html
 // @grant       none
-// @version     2.6.1-patch-karlhorky-2
+// @version     2.6.1-patch-karlhorky-3
 //
 // @match       https://github.com/*
 // @match       https://gist.github.com/*
@@ -527,13 +527,13 @@ if (loc.startsWith('https://github.com/')) {
       //
       // We don't want all button.ajax-pagination-btn because clicking button.ajax-pagination-btn
       // on a profile page e.g. https://github.com/A causes the URL to start changing.
-      '#js-progressive-timeline-item-container button.ajax-pagination-btn',
-      // "N similar comments"
-      'summary.pagination-loader-container > .Details-content--closed',
-      // "Show comment"
-      'div.minimized-comment > details > summary > div > .Details-content--closed',
-      // "Show resolved"
-      'summary[role="button"] > div > span.Details-content--closed',
+      // '#js-progressive-timeline-item-container button.ajax-pagination-btn',
+      // // "N similar comments"
+      // 'summary.pagination-loader-container > .Details-content--closed',
+      // // "Show comment"
+      // 'div.minimized-comment > details > summary > div > .Details-content--closed',
+      // // "Show resolved"
+      // 'summary[role="button"] > div > span.Details-content--closed',
       // "Load diff" on PRs
       'button[data-view-component="true"].load-diff-button',
     ],
