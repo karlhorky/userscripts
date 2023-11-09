@@ -534,7 +534,7 @@ if (loc.startsWith('https://github.com/')) {
       'div.minimized-comment > details > summary > div > .Details-content--closed',
       // "Show resolved"
       'summary[role="button"] > div > span.Details-content--closed',
-      // Load diff on PRs
+      // "Load diff" on PRs
       'button[data-view-component="true"].load-diff-button',
     ],
     (el) => {
