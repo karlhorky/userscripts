@@ -12,6 +12,8 @@
 //
 // ==/UserScript==
 
+// Edited version of to only enable GitHub / Gist https://github.com/ludios/expand-everything
+
 // Disabled:
 // @ match       https://www.goodreads.com/book/show/*
 // @ match       https://www.imdb.com/title/*/reviews*
