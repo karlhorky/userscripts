@@ -519,9 +519,9 @@ function clickIfUnclicked(el) {
 //
 // Test page: https://github.com/A
 // Expected: activity is not expanded; URL does not start changing
-if (loc.startsWith('https://github.com/')) {
+if (/^https:\/\/github.com\/[^/]+\/[^/]+\/pull\/\d+\/files/.test(loc)) {
   observe(
-    1000,
+    10000,
     [
       // "N hidden items; Load more..."
       //
