@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        GitHub Expand Everything
-// @description Click the "show more" links to expand all the text on a page
+// @description Click the "show more" links to expand all the text on a page - DO NOT INSTALL, see below
 // @namespace   ludios
 // @author      ludios
 // @license     AGPL-3.0; https://www.gnu.org/licenses/agpl-3.0.en.html
@@ -11,6 +11,10 @@
 // @match       https://gist.github.com/*
 //
 // ==/UserScript==
+
+// DO NOT INSTALL:
+// - this causes pull request URLs on GitHub to become extremely unresponsive
+// - there's already a native built-in way to load all diffs with alt-click https://github.com/refined-github/refined-github/issues/825#issuecomment-527346920
 
 // Edited version of to only enable GitHub / Gist https://github.com/ludios/expand-everything
 
