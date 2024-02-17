@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.0.2
+// @version      1.0.3
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
@@ -13,7 +13,7 @@
 const observer = new MutationObserver(function attachGithubPrTitleCounter() {
   const inputs = /** @type {NodeListOf<HTMLInputElement>} */ (
     document.querySelectorAll(
-      'input[aria-label="Title"], input[aria-label="Pull Request title"]',
+      'input[aria-label="Title"], input[aria-label="Issue title"], input[aria-labelledby="pull_request_title_header"], input[aria-label="Pull Request title"]',
     )
   );
 
