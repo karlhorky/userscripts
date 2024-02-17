@@ -17,9 +17,16 @@
 // highlighting and formatting
 function css(
   /** @type {TemplateStringsArray} */ strings,
-  /** @type {string[]} */ ...values
+  /** @type {string[]} */ ...expressions
 ) {
-  return strings.join('');
+  let result = /** @type {string} */ (strings[0]);
+
+  for (let i = 1, l = strings.length; i < l; i++) {
+    result += expressions[i - 1];
+    result += strings[i];
+  }
+
+  return result;
 }
 
 // Create an observer instance linked to the callback function
