@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.1.0
+// @version      1.1.1
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
@@ -37,9 +37,10 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
     const counter = document.createElement('span');
     counter.setAttribute(
       'style',
-      'position: absolute; font-size: 13px; background-color: #333; color: white; padding: 1px 6px; border-radius: 2px;',
+      'position: absolute; font-size: 13px; background-color: #333; color: white; padding: 0 6px 1px; align-items: center; border-radius: 3px;',
     );
-    counter.style.top = rect.top + 5 + 'px';
+    counter.style.height = rect.height - 7 + 'px';
+    counter.style.top = rect.top + 4 + 'px';
     counter.style.right = document.body.scrollWidth - rect.right + 5 + 'px';
 
     function createShowTemporarilyFunction() {
@@ -50,7 +51,7 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
       // Return a function that can access and modify the timer
       return function () {
         counter.textContent = String(input.value.length);
-        counter.style.display = 'inline';
+        counter.style.display = 'inline-flex';
         if (timeout) {
           clearTimeout(timeout);
         }
