@@ -9,6 +9,9 @@
 // @grant        GM_setValue
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 const currentStep = GM_getValue('currentStep', 'showButton');
 
 if (currentStep === 'showButton') {

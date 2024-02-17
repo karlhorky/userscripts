@@ -22,6 +22,9 @@
 // lastly, if your site / marketing funnel uses these tracking tokens. you can clean up your users URLs
 // look at the comments below on correct installation to integrate with __gaq.push
 
+// @ts-nocheck
+/* eslint-disable */
+
 if (
   /(utm_|ck_subscriber_id|mkt_tok|vgo_ee)/.test(location.search) &&
   window.history.replaceState

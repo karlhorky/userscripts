@@ -8,6 +8,9 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 const h1 = document.querySelector('div.title_wrapper > h1');
 const movieTitle = h1.firstChild.nodeValue;
 

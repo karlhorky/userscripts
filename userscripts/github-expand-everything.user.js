@@ -232,6 +232,9 @@
 // @ match       https://worldbuilding.stackexchange.com/*
 // @ match       https://writing.stackexchange.com/*
 
+// @ts-nocheck
+/* eslint-disable */
+
 const loc = window.location.href;
 
 function queryElements(selector, callback) {

@@ -8,6 +8,9 @@
 // @match        https://github.com/notifications/beta?*
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 const showAllMessagesParameter = '&show_full=true';
 
 function alwaysShowAllMessages() {

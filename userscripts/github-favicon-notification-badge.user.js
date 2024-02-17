@@ -9,6 +9,9 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 const faviconHref = 'https://github.githubassets.com/favicons/favicon-dark.svg';
 const faviconSize = 32;
 

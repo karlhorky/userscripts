@@ -8,5 +8,12 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 // Click on "Continue and don't gain Amazon Prime benefits"
-setTimeout(() => document.querySelector('.no-thanks-link > a.prime-nothanks-button').click(), 200);
+setTimeout(
+  () =>
+    document.querySelector('.no-thanks-link > a.prime-nothanks-button').click(),
+  200,
+);

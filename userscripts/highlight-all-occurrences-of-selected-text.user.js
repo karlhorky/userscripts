@@ -25,6 +25,9 @@
 //
 // Donate on PayPal to James Wilson: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=L5G6ATNAMJHC4&currency_code=USD
 
+// @ts-nocheck
+/* eslint-disable */
+
 // -----------------------------------------
 //               sync options
 // -----------------------------------------

@@ -9,6 +9,9 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 // Create an observer instance linked to the callback function
 const observer = new MutationObserver(function attachGithubPrTitleCounter() {
   const inputs = document.querySelectorAll(

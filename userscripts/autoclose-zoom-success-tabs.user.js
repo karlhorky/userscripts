@@ -8,6 +8,9 @@
 // @grant        window.close
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 setTimeout(() => {
   if (
     // https://us02web.zoom.us/j/6830992169#success

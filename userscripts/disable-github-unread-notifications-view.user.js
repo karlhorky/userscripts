@@ -8,8 +8,11 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 document
   .querySelector(
-    '.BtnGroup > form[action="/notifications/beta/set_preferred_inbox_query"]:first-child > button'
+    '.BtnGroup > form[action="/notifications/beta/set_preferred_inbox_query"]:first-child > button',
   )
   .click();

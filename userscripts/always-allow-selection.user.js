@@ -9,6 +9,9 @@
 // @grant        none
 // ==/UserScript==
 
+// @ts-nocheck
+/* eslint-disable */
+
 const styleEl = document.createElement('style');
 document.body.appendChild(styleEl);
 styleEl.sheet.insertRule(

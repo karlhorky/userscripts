@@ -18,6 +18,9 @@
 // https://chrome.google.com/webstore/detail/minimal-scrollbar/ekopmclclddpoipchmcbhifohhbmjafd?hl=en
 // https://github.com/iaarchiver/MinimalScrollbar
 
+// @ts-nocheck
+/* eslint-disable */
+
 const rules = [
   `::-webkit-scrollbar {
     /* -webkit-appearance: none; */
