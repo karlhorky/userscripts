@@ -1,7 +1,7 @@
 {
   "name": "userscripts",
   "version": "1.0.0",
-  "description": "Violentmonkey / Greasemonkey userscripts for improving the behavior of various websites",
+  "description": "Viodlentmonkey / Greasemonkey userscripts for improving the behavior of various websites",
   "license": "MIT",
   "author": "Karl Horky",
   "type": "module",
