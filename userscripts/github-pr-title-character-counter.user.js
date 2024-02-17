@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.0.4
+// @version      1.1.0
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
+// @match        https://github.com/*/*/issues/*
 // @match        https://github.com/*/*/pull/*
 // @grant        none
 // ==/UserScript==
