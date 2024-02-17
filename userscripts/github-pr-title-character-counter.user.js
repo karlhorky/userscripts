@@ -9,13 +9,12 @@
 // @grant        none
 // ==/UserScript==
 
-// @ts-nocheck
-/* eslint-disable */
-
 // Create an observer instance linked to the callback function
 const observer = new MutationObserver(function attachGithubPrTitleCounter() {
-  const inputs = document.querySelectorAll(
-    'input[aria-label="Title"], input[aria-label="Pull Request title"]',
+  const inputs = /** @type {NodeListOf<HTMLInputElement>} */ (
+    document.querySelectorAll(
+      'input[aria-label="Title"], input[aria-label="Pull Request title"]',
+    )
   );
 
   for (const input of inputs) {
@@ -41,17 +40,27 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
     );
     counter.style.top = rect.top + 5 + 'px';
     counter.style.right = document.body.scrollWidth - rect.right + 5 + 'px';
-    const update = function () {
-      counter.textContent = input.value.length;
-      counter.style.display = 'inline';
-      if (arguments.callee.timer) {
-        clearTimeout(arguments.callee.timer);
-      }
-      arguments.callee.timer = setTimeout(function () {
-        counter.style.display = 'none';
-      }, 2000);
-    };
-    update();
+
+    function update() {
+      // Create a private variable to store the timer
+      /** @type {number | null} */
+      let timeout = null;
+
+      // Return a function that can access and modify the timer
+      return function () {
+        counter.textContent = String(input.value.length);
+        counter.style.display = 'inline';
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(function () {
+          counter.style.display = 'none';
+        }, 2000);
+      };
+    }
+
+    update()();
+
     input.addEventListener('input', update, true);
     input.addEventListener('keydown', update, true);
     input.addEventListener('keyup', update, true);
@@ -59,7 +68,7 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
     input.addEventListener('focus', update, true);
     input.addEventListener('text', update, true);
     document.body.appendChild(counter);
-    input.dataset.githubPrTitleCounterAttached = true;
+    input.dataset.githubPrTitleCounterAttached = 'true';
   }
 });
 
