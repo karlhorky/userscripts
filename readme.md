@@ -12,7 +12,7 @@ Install with the GitHub raw URL of a userscript (click on the "Raw" button at th
 
 This userscript adds links to themoviedb.org on IMDb pages:
 
-<img src="add-tmdb-links-to-imdb.png" alt="Screenshot of IMDb page with links to TMDb">
+<img src="./userscripts/add-tmdb-links-to-imdb.png" alt="Screenshot of IMDb page with links to TMDb">
 
 ### Refined Foodora.at
 
