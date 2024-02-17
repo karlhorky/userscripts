@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.0.3
+// @version      1.0.4
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
@@ -41,7 +41,7 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
     counter.style.top = rect.top + 5 + 'px';
     counter.style.right = document.body.scrollWidth - rect.right + 5 + 'px';
 
-    function update() {
+    function createShowTemporarilyFunction() {
       // Create a private variable to store the timer
       /** @type {number | null} */
       let timeout = null;
@@ -59,14 +59,16 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
       };
     }
 
-    update()();
+    const showTemporarily = createShowTemporarilyFunction();
 
-    input.addEventListener('input', update, true);
-    input.addEventListener('keydown', update, true);
-    input.addEventListener('keyup', update, true);
-    input.addEventListener('keypress', update, true);
-    input.addEventListener('focus', update, true);
-    input.addEventListener('text', update, true);
+    showTemporarily();
+
+    input.addEventListener('input', showTemporarily, true);
+    input.addEventListener('keydown', showTemporarily, true);
+    input.addEventListener('keyup', showTemporarily, true);
+    input.addEventListener('keypress', showTemporarily, true);
+    input.addEventListener('focus', showTemporarily, true);
+    input.addEventListener('text', showTemporarily, true);
     document.body.appendChild(counter);
     input.dataset.githubPrTitleCounterAttached = 'true';
   }
