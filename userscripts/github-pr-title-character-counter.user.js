@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub PR Title Character Counter
 // @description  Show a counter for the number of characters in the GitHub PR title input
-// @version      1.2.0
+// @version      1.2.1
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
 // @match        https://github.com/*/*/compare/*
@@ -12,6 +12,15 @@
 
 // Requires CSS Anchor Positioning to be enabled in Chrome
 // chrome://flags/#enable-experimental-web-platform-features
+
+// No-op CSS tagged template literal function to enable syntax
+// highlighting and formatting
+function css(
+  /** @type {TemplateStringsArray} */ strings,
+  /** @type {string[]} */ ...values
+) {
+  return strings.join('');
+}
 
 // Create an observer instance linked to the callback function
 const observer = new MutationObserver(function attachGithubPrTitleCounter() {
@@ -27,18 +36,18 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
     const counter = document.createElement('span');
     counter.setAttribute(
       'style',
-      `
-          position: absolute;
-          top: calc(anchor(--github-pr-title-counter-input top) + 4px);
-          right: calc(anchor(--github-pr-title-counter-input right) + 5px);
-          bottom: calc(anchor(--github-pr-title-counter-input bottom) + 4px);
-          font-size: var(--text-body-size-medium, 0.875rem);
-          background-color: #333;
-          color: white;
-          padding: 0 6px 1px;
-          align-items: center;
-          border-radius: 3px;
-        `,
+      css`
+        position: absolute;
+        top: calc(anchor(--github-pr-title-counter-input top) + 4px);
+        right: calc(anchor(--github-pr-title-counter-input right) + 5px);
+        bottom: calc(anchor(--github-pr-title-counter-input bottom) + 4px);
+        font-size: var(--text-body-size-medium, 0.875rem);
+        background-color: #333;
+        color: white;
+        padding: 0 6px 1px;
+        align-items: center;
+        border-radius: 3px;
+      `,
     );
 
     function createShowFunction() {
