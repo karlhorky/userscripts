@@ -9,7 +9,7 @@ const noRestrictedSyntaxOptions = [
   .../** @type {import('@typescript-eslint/utils').TSESLint.Linter.RuleLevelAndOptions} */ (
     upleveledNoRestrictedSyntaxOptions.filter(
       (option) =>
-        !/^Using document\.querySelectorAll\(\) can lead to problems|Using document\.getElementById\(\) can lead to problems/.test(
+        !/^Using document\.querySelector\(\) can lead to problems|Using document\.querySelectorAll\(\) can lead to problems|Using document\.getElementById\(\) can lead to problems/.test(
           /** @type {{message: string}} */ (option).message,
         ),
     )
