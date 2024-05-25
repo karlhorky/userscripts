@@ -10,7 +10,6 @@
 // ==/UserScript==
 
 // @ts-nocheck
-/* eslint-disable */
 
 const styleEl = document.createElement('style');
 document.body.appendChild(styleEl);

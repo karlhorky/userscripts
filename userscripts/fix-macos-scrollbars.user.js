@@ -19,7 +19,6 @@
 // https://github.com/iaarchiver/MinimalScrollbar
 
 // @ts-nocheck
-/* eslint-disable */
 
 const rules = [
   `::-webkit-scrollbar {

@@ -233,12 +233,10 @@
 // @ match       https://writing.stackexchange.com/*
 
 // @ts-nocheck
-/* eslint-disable */
 
 const loc = window.location.href;
 
 function queryElements(selector, callback) {
-  // eslint-disable-next-line no-restricted-syntax -- document.querySelectorAll is ok here
   const elements = document.querySelectorAll(selector);
   elements.forEach((element) => callback(element));
 }

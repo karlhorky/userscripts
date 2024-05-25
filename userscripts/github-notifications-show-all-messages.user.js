@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 // @ts-nocheck
-/* eslint-disable */
 
 const showAllMessagesParameter = '&show_full=true';
 
