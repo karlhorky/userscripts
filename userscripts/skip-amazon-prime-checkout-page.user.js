@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 // @ts-nocheck
-/* eslint-disable */
 
 // Click on "Continue and don't gain Amazon Prime benefits"
 setTimeout(

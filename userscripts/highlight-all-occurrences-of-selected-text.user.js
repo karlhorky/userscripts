@@ -267,7 +267,6 @@ init().catch((error) => {
 });
 
 /** @ts-ignore this is a new API */
-// eslint-disable-next-line no-undef
 const highlights = new Highlight();
 /** @ts-ignore this is a new API */
 CSS.highlights.set(highlightName(), highlights);
@@ -442,7 +441,6 @@ function highlight(/** @type {number} */ runNumber) {
 function drawScrollMarkers(/** @type {number} */ runNumber) {
   if (areScrollMarkersEnabled()) {
     for (const highlightedNode of highlights) {
-      // eslint-disable-next-line no-loop-func -- From original script
       requestAnimationFrame(() => {
         const dpr = devicePixelRatio || 1;
         if (runNumber === latestRunNumber) {

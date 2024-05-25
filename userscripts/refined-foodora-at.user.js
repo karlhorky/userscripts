@@ -9,7 +9,6 @@
 // ==/UserScript==
 
 // @ts-nocheck
-/* eslint-disable */
 
 const rules = [
   `/* Make whole cart area scrollable */
