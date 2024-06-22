@@ -10,6 +10,9 @@
 // @grant        none
 // ==/UserScript==
 
+// ❗️ Deprecated: Use Refined GitHub instead:
+// https://github.com/refined-github/refined-github/pull/7428
+
 // Requires CSS Anchor Positioning to be enabled in Chrome
 // chrome://flags/#enable-experimental-web-platform-features
 
