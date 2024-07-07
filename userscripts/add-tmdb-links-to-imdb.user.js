@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         Add TMDb links to IMDb
-// @description  Add links to themoviedb.org on IMDb pages
-// @version      1.1.0
-// @author       Karl Horky
-// @namespace    https://www.karlhorky.com/
-// @match        https://www.imdb.com/title/*
-// @grant        GM.xmlHttpRequest
+// @name            Add TMDb links to IMDb
+// @description     Add links to themoviedb.org on IMDb pages
+// @version         1.1.0
+// @author          Karl Horky
+// @namespace       https://www.karlhorky.com/
+// @match           https://www.imdb.com/title/*
+// @grant           GM.xmlHttpRequest
 // @top-level-await
 // ==/UserScript==
 
