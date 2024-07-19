@@ -8,11 +8,13 @@
 // @grant        none
 // ==/UserScript==
 
-// @ts-nocheck
-
 // Click on "Continue and don't gain Amazon Prime benefits"
-setTimeout(
-  () =>
-    document.querySelector('.no-thanks-link > a.prime-nothanks-button').click(),
-  200,
-);
+setTimeout(() => {
+  const noThanksAnchor = /** @type {HTMLAnchorElement | null} */ (
+    document.querySelector('.no-thanks-link > a.prime-nothanks-button')
+  );
+
+  if (noThanksAnchor) {
+    noThanksAnchor.click();
+  }
+}, 200);

@@ -8,10 +8,14 @@
 // @grant        none
 // ==/UserScript==
 
-// @ts-nocheck
+const allFilterButton =
+  /** @type {HTMLButtonElement | null} */
+  (
+    document.querySelector(
+      '.BtnGroup > form[action="/notifications/beta/set_preferred_inbox_query"]:first-child > button',
+    )
+  );
 
-document
-  .querySelector(
-    '.BtnGroup > form[action="/notifications/beta/set_preferred_inbox_query"]:first-child > button',
-  )
-  .click();
+if (allFilterButton) {
+  allFilterButton.click();
+}
