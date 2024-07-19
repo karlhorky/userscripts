@@ -236,7 +236,11 @@
 
 const loc = window.location.href;
 
-function queryElements(selector, callback) {
+/**
+ * @typedef {() => void} Callback
+ */
+
+function queryElements(selector, /** @type {Callback} */ callback) {
   const elements = document.querySelectorAll(selector);
   elements.forEach((element) => callback(element));
 }
@@ -244,12 +248,13 @@ function queryElements(selector, callback) {
 const logPrefix = 'Expand Everything: ';
 // let pageCounter = 0;
 let mutations = 0;
+/** @type {MutationObserver | null} */
 let observer = null;
 let lastHref = document.location.href;
 let locationInterval = null;
 
 // Observe some selectors and run a callback for each selected element.
-function observe(maxMutations, selectors, callback) {
+function observe(maxMutations, selectors, /** @type {Callback} */ callback) {
   const o = /** @type {MutationObserver | null} */ (observer);
   if (o !== null) {
     throw new Error(`observe(...) called more than once`);
@@ -315,9 +320,13 @@ function observe(maxMutations, selectors, callback) {
   }
 
   // So far, only Chromium-based browsers have Navigation API: https://caniuse.com/mdn-api_navigation
-  if (window.navigation && window.navigation.addEventListener) {
+  const windowNavigation =
+    /** @type {undefined | { addEventListener: (type: string, listener: () => void) => void }} */ (
+      window.navigation
+    );
+  if (windowNavigation) {
     console.log(`${logPrefix}using Navigation API to detect location changes`);
-    window.navigation.addEventListener('navigate', () => {
+    windowNavigation.addEventListener('navigate', () => {
       navigated();
     });
   } else {
@@ -342,6 +351,7 @@ function observe(maxMutations, selectors, callback) {
   }
 }
 
+/** @type {WeakMap<HTMLElement, boolean>} */
 let alreadyClicked;
 function resetAlreadyClicked() {
   alreadyClicked = new WeakMap();
@@ -349,7 +359,10 @@ function resetAlreadyClicked() {
 resetAlreadyClicked();
 
 // Click on something if it hasn't already been clicked.
-function clickIfUnclicked(el) {
+function clickIfUnclicked(
+  /** @type {HTMLElement} */
+  el,
+) {
   if (alreadyClicked.get(el)) {
     return;
   }

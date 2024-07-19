@@ -8,14 +8,15 @@
 // @match        https://github.com/notifications/beta?*
 // ==/UserScript==
 
-// @ts-nocheck
-
 const showAllMessagesParameter = '&show_full=true';
 
 function alwaysShowAllMessages() {
   Array.from(
-    document.querySelectorAll(
-      '.notifications-list-item .flex-row:first-child a[href]',
+    /** @type {NodeListOf<HTMLAnchorElement>} */
+    (
+      document.querySelectorAll(
+        '.notifications-list-item .flex-row:first-child a[href]',
+      )
     ),
   ).forEach((anchor) => {
     if (anchor.href.includes(showAllMessagesParameter)) return;

@@ -18,8 +18,6 @@
 // https://chrome.google.com/webstore/detail/minimal-scrollbar/ekopmclclddpoipchmcbhifohhbmjafd?hl=en
 // https://github.com/iaarchiver/MinimalScrollbar
 
-// @ts-nocheck
-
 const rules = [
   `::-webkit-scrollbar {
     /* -webkit-appearance: none; */
@@ -42,4 +40,6 @@ const rules = [
 
 const styleEl = document.createElement('style');
 document.body.appendChild(styleEl);
-rules.forEach((rule) => styleEl.sheet.insertRule(rule));
+rules.forEach((rule) =>
+  /** @type {CSSStyleSheet} */ (styleEl.sheet).insertRule(rule),
+);

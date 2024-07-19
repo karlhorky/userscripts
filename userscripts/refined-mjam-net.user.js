@@ -8,8 +8,6 @@
 // @grant        none
 // ==/UserScript==
 
-// @ts-nocheck
-
 const rules = [
   `/* Make whole cart area scrollable */
   #cart {
@@ -40,4 +38,6 @@ const rules = [
 
 const styleEl = document.createElement('style');
 document.body.appendChild(styleEl);
-rules.forEach((rule) => styleEl.sheet.insertRule(rule));
+rules.forEach((rule) =>
+  /** @type {CSSStyleSheet} */ (styleEl.sheet).insertRule(rule),
+);
