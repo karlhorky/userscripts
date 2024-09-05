@@ -7,7 +7,7 @@
   "type": "module",
   "devDependencies": {
     "@types/greasemonkey": "^4.0.7",
-    "eslint-config-upleveled": "8.6.15",
+    "eslint-config-upleveled": "8.6.16",
     "prettier": "3.3.3",
     "typescript": "5.5.4"
   },
