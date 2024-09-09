@@ -5,7 +5,7 @@
 // @description  Highlight all occurrences of any text that has been selected on the page
 // @author       James Wilson, Karl Horky
 // @namespace    https://www.karlhorky.com/
-// @version      2.0.0
+// @version      2.0.1
 // @match        https://*/*
 // @match        http://*/*
 // @grant        none
@@ -254,17 +254,11 @@ function addPressedKeysListeners() {
   return pressedKeysInner;
 }
 
-async function init() {
-  await addStyleElement();
-  scrollMarkersCanvasContext = await addScrollMarkersCanvas();
-  pressedKeys = addPressedKeysListeners();
-  document.addEventListener('selectstart', onSelectStart);
-  document.addEventListener('selectionchange', onSelectionChange);
-}
-
-init().catch((error) => {
-  console.error(error);
-});
+await addStyleElement();
+scrollMarkersCanvasContext = await addScrollMarkersCanvas();
+pressedKeys = addPressedKeysListeners();
+document.addEventListener('selectstart', onSelectStart);
+document.addEventListener('selectionchange', onSelectionChange);
 
 /** @ts-ignore this is a new API */
 const highlights = new Highlight();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name            Add TMDb links to IMDb
 // @description     Add links to themoviedb.org on IMDb pages
-// @version         1.1.0
+// @version         1.1.1
 // @author          Karl Horky
 // @namespace       https://www.karlhorky.com/
 // @match           https://www.imdb.com/title/*
@@ -38,72 +38,71 @@ function gmXhr(
   });
 }
 
-(async () => {
-  const h1 = document.querySelector('h1[data-testid="hero__pageTitle"]');
 
-  if (!h1) {
-    throw new Error(
-      'Could not find movie title element `h1[data-testid="hero__pageTitle"]`',
-    );
-  }
+const h1 = document.querySelector('h1[data-testid="hero__pageTitle"]');
 
-  if (!h1.firstChild) {
-    throw new Error(
-      'Movie title element `h1[data-testid="hero__pageTitle"]` has no child nodes',
-    );
-  }
-
-  const movieTitle = /** @type {HTMLSpanElement} */ (h1.firstChild).innerText;
-
-  console.log(`https://www.themoviedb.org/search/trending?query=${movieTitle}`);
-
-  const json = /**
-   * @type {{
-   *   results: {
-   *     id: number;
-   *     title: string;
-   *     name: string;
-   *     media_type: string;
-   *     release_date: string;
-   *     first_air_date: string;
-   *   }[];
-   * }}
-   */ (
-    await gmXhr(
-      `https://www.themoviedb.org/search/trending?query=${movieTitle}`,
-      {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          Referer: 'https://www.themoviedb.org/search',
-          'x-requested-with': 'XMLHttpRequest',
-        },
-      },
-    )
+if (!h1) {
+  throw new Error(
+    'Could not find movie title element `h1[data-testid="hero__pageTitle"]`',
   );
+}
 
-  let linksHtml =
-    '<h4 style="margin: 16px 0 12px; color: currentColor; font-size: 22px;">TMDb Results</h4>';
-  json.results.forEach((result) => {
-    if (typeof result === 'string') return;
+if (!h1.firstChild) {
+  throw new Error(
+    'Movie title element `h1[data-testid="hero__pageTitle"]` has no child nodes',
+  );
+}
 
-    const {
-      media_type: mediaType,
-      id,
-      title,
-      name,
-      release_date: releaseDate,
-      first_air_date: firstAirDate,
-    } = result;
+const movieTitle = /** @type {HTMLSpanElement} */ (h1.firstChild).innerText;
 
-    if (!/^tv|movie$/.test(mediaType)) return;
+console.log(`https://www.themoviedb.org/search/trending?query=${movieTitle}`);
 
-    const link = `https://www.themoviedb.org/${mediaType}/${id}`;
+const json = /**
+  * @type {{
+  *   results: {
+  *     id: number;
+  *     title: string;
+  *     name: string;
+  *     media_type: string;
+  *     release_date: string;
+  *     first_air_date: string;
+  *   }[];
+  * }}
+  */ (
+  await gmXhr(
+    `https://www.themoviedb.org/search/trending?query=${movieTitle}`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Referer: 'https://www.themoviedb.org/search',
+        'x-requested-with': 'XMLHttpRequest',
+      },
+    },
+  )
+);
 
-    linksHtml += `<a href="${link}" class="ipc-link" style="margin-bottom: 5px; color: currentColor; display: block;">${
-      title || name
-    } (${releaseDate || firstAirDate})</a>`;
-  });
+let linksHtml =
+  '<h4 style="margin: 16px 0 12px; color: currentColor; font-size: 22px;">TMDb Results</h4>';
+json.results.forEach((result) => {
+  if (typeof result === 'string') return;
 
-  h1.insertAdjacentHTML('afterend', linksHtml + '<br />');
-})().catch(console.error);
+  const {
+    media_type: mediaType,
+    id,
+    title,
+    name,
+    release_date: releaseDate,
+    first_air_date: firstAirDate,
+  } = result;
+
+  if (!/^tv|movie$/.test(mediaType)) return;
+
+  const link = `https://www.themoviedb.org/${mediaType}/${id}`;
+
+  linksHtml += `<a href="${link}" class="ipc-link" style="margin-bottom: 5px; color: currentColor; display: block;">${
+    title || name
+  } (${releaseDate || firstAirDate})</a>`;
+});
+
+h1.insertAdjacentHTML('afterend', linksHtml + '<br />');
