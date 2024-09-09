@@ -9,6 +9,7 @@
 // @match        https://*/*
 // @match        http://*/*
 // @grant        none
+// @top-level-await
 // ==/UserScript==
 //
 // Copyright James Wilson / neaumusic 2019
