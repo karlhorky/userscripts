@@ -38,7 +38,6 @@ function gmXhr(
   });
 }
 
-
 const h1 = document.querySelector('h1[data-testid="hero__pageTitle"]');
 
 if (!h1) {
