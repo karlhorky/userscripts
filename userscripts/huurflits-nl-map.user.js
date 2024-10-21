@@ -7,6 +7,7 @@
 // @description  Identifies all addresses on huurflits.nl and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://huurflits.nl/woningoverzicht/zoekresultaten*
+// @match        https://huurflits.nl/huurwoningen/*
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // @require      https://unpkg.com/leaflet@1.9.3/dist/leaflet.js
