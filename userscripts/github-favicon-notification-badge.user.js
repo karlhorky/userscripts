@@ -92,8 +92,9 @@ async function fetchAndUpdateNotifications() {
   }
 
   const unreadNotificationsOnPage =
-    document.querySelector('.js-notification-inboxes .selected .count')
-      .innerText || undefined;
+    document.querySelector(
+      '.js-notification-inboxes [data-item-id="inbox"] .Counter',
+    ).innerText || undefined;
 
   // Reload the whole page if the page is in the background and the current page is out of date
   if (
