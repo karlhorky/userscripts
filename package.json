@@ -7,9 +7,9 @@
   "type": "module",
   "devDependencies": {
     "@types/greasemonkey": "4.0.7",
-    "@typescript-eslint/utils": "8.39.0",
-    "eslint": "9.32.0",
-    "eslint-config-upleveled": "9.2.12",
+    "@typescript-eslint/utils": "8.39.1",
+    "eslint": "9.33.0",
+    "eslint-config-upleveled": "9.2.13",
     "prettier": "3.6.2",
     "typescript": "5.9.2"
   },
