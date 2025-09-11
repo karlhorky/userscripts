@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Disable GitHub Unread Notifications view
 // @description  Redirect away from Notifications "Unread" view
-// @version      1.1.0
+// @version      1.1.1
 // @author       Karl Horky
 // @namespace    https://www.karlhorky.com/
-// @match        https://github.com/notifications?query=is%3Aunread
+// @match        https://github.com/notifications?query=*
 // @grant        none
 // ==/UserScript==
 
