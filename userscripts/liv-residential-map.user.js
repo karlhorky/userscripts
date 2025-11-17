@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.3.0
+// @version      0.3.1
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -107,7 +107,7 @@ async function geocode(query) {
   const cached = await getCachedLocation(query);
   if (cached) {
     console.debug('[LivMap] Cache hit for', query, cached);
-    return cached;
+    return cached; // no delay for cached results
   }
 
   console.debug('[LivMap] Geocoding', query);
@@ -120,7 +120,7 @@ async function geocode(query) {
   const response = await fetch(url.toString(), {
     headers: {
       'Accept-Language': 'nl,en',
-      'User-Agent': 'liv-properties-userscript/0.7 (personal use)',
+      'User-Agent': 'liv-properties-userscript/0.3.1 (personal use)',
     },
   });
 
@@ -140,6 +140,10 @@ async function geocode(query) {
   }
 
   await setCachedLocation(query, lat, lng);
+
+  // Be polite to the public geocoding service, but only for fresh lookups
+  await delay(1000);
+
   return { lat, lng };
 }
 
@@ -297,9 +301,6 @@ async function initMapOnce() {
       markerCount += 1;
 
       console.debug('[LivMap] Added marker for', query, location);
-
-      // Be polite to the public geocoding service
-      await delay(1000);
     } catch (err) {
       console.error('[LivMap] Error geocoding', query, err);
     }
