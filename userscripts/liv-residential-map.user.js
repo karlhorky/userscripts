@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.1.0
+// @version      0.1.1
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -67,8 +67,11 @@ function setCachedLocation(query, lat, lng) {
 async function geocode(query) {
   const cached = getCachedLocation(query);
   if (cached) {
+    console.debug('[LivMap] Cache hit for', query, cached);
     return cached;
   }
+
+  console.debug('[LivMap] Geocoding', query);
 
   const url = new URL('https://nominatim.openstreetmap.org/search');
   url.searchParams.set('format', 'json');
@@ -78,7 +81,7 @@ async function geocode(query) {
   const response = await fetch(url.toString(), {
     headers: {
       'Accept-Language': 'nl,en',
-      'User-Agent': 'liv-properties-userscript/0.2 (personal use)',
+      'User-Agent': 'liv-properties-userscript/0.4 (personal use)',
     },
   });
 
@@ -105,7 +108,36 @@ function escapeHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function setupLeafletIcons() {
+  // Override the default icon paths so it does not try /images/marker-icon-2x.png on the portal domain
+  const base = 'https://unpkg.com/leaflet@1.9.3/dist/images/';
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: base + 'marker-icon-2x.png',
+    iconUrl: base + 'marker-icon.png',
+    shadowUrl: base + 'marker-shadow.png',
+  });
+}
+
+function cleanAddress(raw) {
+  // Collapse whitespace
+  let addr = raw.replace(/\s+/g, ' ').trim();
+
+  // Some sites repeat the postcode + city; if that becomes an issue,
+  // you can try more aggressive cleaning here.
+
+  return addr;
+}
+
 async function initMapOnce() {
+  console.debug('[LivMap] initMapOnce start');
+
+  if (typeof L === 'undefined') {
+    console.error('[LivMap] Leaflet (L) is undefined');
+    return;
+  }
+
+  setupLeafletIcons();
+
   const list = document.querySelector('#propertyList');
   if (!list) {
     console.warn('[LivMap] #propertyList not found');
@@ -113,12 +145,15 @@ async function initMapOnce() {
   }
 
   const cards = list.querySelectorAll('a.property');
+  console.debug('[LivMap] Found property cards:', cards.length);
+
   if (!cards.length) {
     console.warn('[LivMap] No property cards found');
     return;
   }
 
   if (document.getElementById('liv-property-map')) {
+    console.debug('[LivMap] Map already initialized');
     return;
   }
 
@@ -129,15 +164,15 @@ async function initMapOnce() {
 
   list.parentNode.insertBefore(container, list);
 
-  const map = window.L.map('liv-property-map').setView([52.2, 5.3], 7);
+  const map = L.map('liv-property-map').setView([52.2, 5.3], 7);
 
-  window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution:
       '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
 
-  const bounds = window.L.latLngBounds();
+  const bounds = L.latLngBounds();
   let markerCount = 0;
 
   for (const card of cards) {
@@ -147,10 +182,11 @@ async function initMapOnce() {
     if (!titleEl || !addrEl) continue;
 
     const title = titleEl.textContent.trim();
-    const address = addrEl.textContent.replace(/\s+/g, ' ').trim();
+    const address = cleanAddress(addrEl.textContent);
     const href = card.href;
 
-    const query = title + ', ' + address + ', Netherlands';
+    // Use only the address plus country to keep the query simple
+    const query = address + ', Netherlands';
 
     try {
       const location = await geocode(query);
@@ -159,7 +195,7 @@ async function initMapOnce() {
         continue;
       }
 
-      const marker = window.L.marker([location.lat, location.lng]).addTo(map);
+      const marker = L.marker([location.lat, location.lng]).addTo(map);
 
       const popupHtml =
         '<div>' +
@@ -180,6 +216,8 @@ async function initMapOnce() {
       bounds.extend([location.lat, location.lng]);
       markerCount += 1;
 
+      console.debug('[LivMap] Added marker for', query, location);
+
       // Be polite to the public geocoding service
       await delay(1000);
     } catch (err) {
@@ -189,6 +227,7 @@ async function initMapOnce() {
 
   if (markerCount > 0 && bounds.isValid()) {
     map.fitBounds(bounds, { padding: [40, 40] });
+    console.debug('[LivMap] Fit bounds to markers, count:', markerCount);
   } else {
     console.warn('[LivMap] No markers added');
   }
