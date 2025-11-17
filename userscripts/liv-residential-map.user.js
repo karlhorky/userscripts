@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.1.1
+// @version      0.1.2
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -81,7 +81,7 @@ async function geocode(query) {
   const response = await fetch(url.toString(), {
     headers: {
       'Accept-Language': 'nl,en',
-      'User-Agent': 'liv-properties-userscript/0.4 (personal use)',
+      'User-Agent': 'liv-properties-userscript/0.5 (personal use)',
     },
   });
 
@@ -109,22 +109,33 @@ function escapeHtml(str) {
 }
 
 function setupLeafletIcons() {
-  // Override the default icon paths so it does not try /images/marker-icon-2x.png on the portal domain
-  const base = 'https://unpkg.com/leaflet@1.9.3/dist/images/';
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: base + 'marker-icon-2x.png',
-    iconUrl: base + 'marker-icon.png',
-    shadowUrl: base + 'marker-shadow.png',
+  // Simple blue pin-ish SVG, authored here so we can safely inline it
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
+  <path d="M12.5 0C6.16 0 1 5.16 1 11.5c0 7.71 8.67 17.96 10.99 20.5.28.31.74.31 1.02 0C15.33 29.46 24 19.21 24 11.5 24 5.16 18.84 0 12.5 0z" fill="#2a7fff" stroke="#1f4fbf" stroke-width="1"/>
+  <circle cx="12.5" cy="11.5" r="4" fill="#ffffff"/>
+</svg>
+  `.trim();
+
+  const dataUrl = 'data:image/svg+xml,' + encodeURIComponent(svg);
+
+  const customIcon = L.icon({
+    iconUrl: dataUrl,
+    iconRetinaUrl: dataUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: null,
+    shadowSize: null,
+    shadowAnchor: null,
   });
+
+  L.Marker.prototype.options.icon = customIcon;
 }
 
 function cleanAddress(raw) {
   // Collapse whitespace
   let addr = raw.replace(/\s+/g, ' ').trim();
-
-  // Some sites repeat the postcode + city; if that becomes an issue,
-  // you can try more aggressive cleaning here.
-
   return addr;
 }
 
@@ -185,7 +196,6 @@ async function initMapOnce() {
     const address = cleanAddress(addrEl.textContent);
     const href = card.href;
 
-    // Use only the address plus country to keep the query simple
     const query = address + ', Netherlands';
 
     try {
