@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.1.2
+// @version      0.2.0
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -81,7 +81,7 @@ async function geocode(query) {
   const response = await fetch(url.toString(), {
     headers: {
       'Accept-Language': 'nl,en',
-      'User-Agent': 'liv-properties-userscript/0.5 (personal use)',
+      'User-Agent': 'liv-properties-userscript/0.6 (personal use)',
     },
   });
 
@@ -109,7 +109,6 @@ function escapeHtml(str) {
 }
 
 function setupLeafletIcons() {
-  // Simple blue pin-ish SVG, authored here so we can safely inline it
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="25" height="41" viewBox="0 0 25 41">
   <path d="M12.5 0C6.16 0 1 5.16 1 11.5c0 7.71 8.67 17.96 10.99 20.5.28.31.74.31 1.02 0C15.33 29.46 24 19.21 24 11.5 24 5.16 18.84 0 12.5 0z" fill="#2a7fff" stroke="#1f4fbf" stroke-width="1"/>
@@ -134,9 +133,22 @@ function setupLeafletIcons() {
 }
 
 function cleanAddress(raw) {
-  // Collapse whitespace
   let addr = raw.replace(/\s+/g, ' ').trim();
   return addr;
+}
+
+function extractPrice(card) {
+  const priceEl = card.querySelector('span.listprice1');
+  if (!priceEl) return '';
+  return priceEl.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function extractSize(card) {
+  const sizeEl = Array.from(card.querySelectorAll('div.ml-2.text-c-500')).find(
+    (el) => el.textContent.includes('m2'),
+  );
+  if (!sizeEl) return '';
+  return sizeEl.textContent.replace(/\s+/g, ' ').trim();
 }
 
 async function initMapOnce() {
@@ -196,6 +208,13 @@ async function initMapOnce() {
     const address = cleanAddress(addrEl.textContent);
     const href = card.href;
 
+    const price = extractPrice(card);
+    const size = extractSize(card);
+    const detailsLine = [price, size]
+      .filter(Boolean)
+      .map(escapeHtml)
+      .join(' · ');
+
     const query = address + ', Netherlands';
 
     try {
@@ -207,28 +226,39 @@ async function initMapOnce() {
 
       const marker = L.marker([location.lat, location.lng]).addTo(map);
 
-      const popupHtml =
-        '<div>' +
+      const popupParts = [
+        '<div>',
         '<div style="font-weight:600; margin-bottom:4px;">' +
-        escapeHtml(title) +
-        '</div>' +
+          escapeHtml(title) +
+          '</div>',
         '<div style="font-size:0.9rem; margin-bottom:4px;">' +
-        escapeHtml(address) +
-        '</div>' +
-        '<a href="' +
-        href +
-        '" target="_blank" rel="noopener noreferrer">' +
-        'Bekijk woning' +
-        '</a>' +
-        '</div>';
+          escapeHtml(address) +
+          '</div>',
+      ];
 
-      marker.bindPopup(popupHtml);
+      if (detailsLine) {
+        popupParts.push(
+          '<div style="font-size:0.9rem; margin-bottom:4px;">' +
+            detailsLine +
+            '</div>',
+        );
+      }
+
+      popupParts.push(
+        '<a href="' +
+          href +
+          '" target="_blank" rel="noopener noreferrer">' +
+          'Bekijk woning' +
+          '</a>',
+      );
+      popupParts.push('</div>');
+
+      marker.bindPopup(popupParts.join(''));
       bounds.extend([location.lat, location.lng]);
       markerCount += 1;
 
       console.debug('[LivMap] Added marker for', query, location);
 
-      // Be polite to the public geocoding service
       await delay(1000);
     } catch (err) {
       console.error('[LivMap] Error geocoding', query, err);
