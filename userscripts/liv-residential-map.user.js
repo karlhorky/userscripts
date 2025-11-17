@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.2.1
+// @version      0.3.0
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -34,11 +34,54 @@ function domReady() {
   return Promise.resolve();
 }
 
-function getCachedLocation(query) {
+// Storage helpers: prefer GM_* storage, fall back to localStorage
+async function storageGet(key) {
   try {
-    const key = 'liv-geocode:' + query;
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return null;
+    if (typeof GM_getValue === 'function') {
+      const value = await GM_getValue(key, null);
+      return value;
+    }
+  } catch (err) {
+    console.warn(
+      '[LivMap] GM_getValue failed, falling back to localStorage',
+      err,
+    );
+  }
+
+  try {
+    return window.localStorage.getItem(key);
+  } catch (err) {
+    console.warn('[LivMap] localStorage getItem failed', err);
+    return null;
+  }
+}
+
+async function storageSet(key, value) {
+  try {
+    if (typeof GM_setValue === 'function') {
+      await GM_setValue(key, value);
+      return;
+    }
+  } catch (err) {
+    console.warn(
+      '[LivMap] GM_setValue failed, falling back to localStorage',
+      err,
+    );
+  }
+
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (err) {
+    console.warn('[LivMap] localStorage setItem failed', err);
+  }
+}
+
+async function getCachedLocation(query) {
+  const key = 'liv-geocode:' + query;
+  const raw = await storageGet(key);
+  if (!raw) return null;
+
+  try {
     const data = JSON.parse(raw);
     if (
       typeof data === 'object' &&
@@ -49,23 +92,19 @@ function getCachedLocation(query) {
       return data;
     }
   } catch (err) {
-    console.warn('[LivMap] Error reading geocode cache', err);
+    console.warn('[LivMap] Error parsing cached geocode', err);
   }
   return null;
 }
 
-function setCachedLocation(query, lat, lng) {
-  try {
-    const key = 'liv-geocode:' + query;
-    const value = JSON.stringify({ lat, lng });
-    window.localStorage.setItem(key, value);
-  } catch (err) {
-    console.warn('[LivMap] Error writing geocode cache', err);
-  }
+async function setCachedLocation(query, lat, lng) {
+  const key = 'liv-geocode:' + query;
+  const value = JSON.stringify({ lat, lng });
+  await storageSet(key, value);
 }
 
 async function geocode(query) {
-  const cached = getCachedLocation(query);
+  const cached = await getCachedLocation(query);
   if (cached) {
     console.debug('[LivMap] Cache hit for', query, cached);
     return cached;
@@ -81,7 +120,7 @@ async function geocode(query) {
   const response = await fetch(url.toString(), {
     headers: {
       'Accept-Language': 'nl,en',
-      'User-Agent': 'liv-properties-userscript/0.6 (personal use)',
+      'User-Agent': 'liv-properties-userscript/0.7 (personal use)',
     },
   });
 
@@ -100,7 +139,7 @@ async function geocode(query) {
     return null;
   }
 
-  setCachedLocation(query, lat, lng);
+  await setCachedLocation(query, lat, lng);
   return { lat, lng };
 }
 
@@ -259,6 +298,7 @@ async function initMapOnce() {
 
       console.debug('[LivMap] Added marker for', query, location);
 
+      // Be polite to the public geocoding service
       await delay(1000);
     } catch (err) {
       console.error('[LivMap] Error geocoding', query, err);
