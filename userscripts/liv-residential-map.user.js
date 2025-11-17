@@ -3,7 +3,7 @@
 // ==UserScript==
 // @name         Map Addresses on LIV Residential
 // @namespace    http://your.namespace.here
-// @version      0.2.0
+// @version      0.2.1
 // @description  Identifies all addresses on LIV Residential and displays them on an OpenStreetMap overlay
 // @author       Your Name
 // @match        https://portal.livresidential.nl/zoeken*
@@ -138,7 +138,7 @@ function cleanAddress(raw) {
 }
 
 function extractPrice(card) {
-  const priceEl = card.querySelector('span.listprice1');
+  const priceEl = card.querySelector('span[class^="listprice"]');
   if (!priceEl) return '';
   return priceEl.textContent.replace(/\s+/g, ' ').trim();
 }
