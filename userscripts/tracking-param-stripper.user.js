@@ -1,8 +1,7 @@
 // ==UserScript==
 // @name         Tracking Param Stripper
 // @description  Drop the UTM params from a URL when the page loads.
-// @extra        Cuz you know they're all ugly n shit.
-// @version      1.5.0
+// @version      1.5.1
 // @author       Paul Irish, Karl Horky
 // @namespace    http://github.com/paulirish
 // @include      http*://*
@@ -11,6 +10,7 @@
 // From https://gist.github.com/paulirish/626834
 
 // Updates:
+// - 2026-04-17 Delay LinkedIn stripping 1s for slow LinkedIn trailing slash URL rewrite
 // - 2025-07-21 Add matching for rcm (LinkedIn)
 // - 2025-07-21 Match hostnames
 // - 2025-07-20 Fix problems reported by ESLint and TS
@@ -37,25 +37,30 @@ if (
   trackingQueryParamPatterns &&
   new RegExp(`(${trackingQueryParamPatterns})`).test(window.location.search)
 ) {
-  // thx @cowboy for the revised hash param magic.
-  const oldUrl = window.location.href;
-  const newUrl = oldUrl.replace(
-    /\?([^#]*)/,
-    (substring, /** @type {string} */ search) => {
-      search = search
-        .split('&')
-        .filter(
-          (queryParamName) =>
-            !new RegExp(`^(${trackingQueryParamPatterns})`).test(
-              queryParamName,
-            ),
-        )
-        .join('&');
-      return search ? '?' + search : '';
-    },
-  );
+  setTimeout(
+    () => {
+      // thx @cowboy for the revised hash param magic.
+      const oldUrl = window.location.href;
+      const newUrl = oldUrl.replace(
+        /\?([^#]*)/,
+        (substring, /** @type {string} */ search) => {
+          search = search
+            .split('&')
+            .filter(
+              (queryParamName) =>
+                !new RegExp(`^(${trackingQueryParamPatterns})`).test(
+                  queryParamName,
+                ),
+            )
+            .join('&');
+          return search ? '?' + search : '';
+        },
+      );
 
-  if (newUrl !== oldUrl) {
-    window.history.replaceState({}, '', newUrl);
-  }
+      if (newUrl !== oldUrl) {
+        window.history.replaceState({}, '', newUrl);
+      }
+    },
+    window.location.hostname === 'www.linkedin.com' ? 1000 : 0,
+  );
 }
