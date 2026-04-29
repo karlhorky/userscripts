@@ -91,7 +91,6 @@ const observer = new MutationObserver(function attachGithubPrTitleCounter() {
 
     document.body.appendChild(counter);
     input.dataset.githubPrTitleCounterAttached = 'true';
-    // @ts-expect-error CSS Anchor Positioning is experimental Chrome-only feature https://github.com/Fyrd/caniuse/issues/6471
     input.style.anchorName = '--github-pr-title-counter-input'; // Add this line
   }
 });
