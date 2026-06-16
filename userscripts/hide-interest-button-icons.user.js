@@ -10,8 +10,8 @@
 
 const styleEl = document.createElement('style');
 
-document.body.appendChild(styleEl);
+document.documentElement.appendChild(styleEl);
 
 /** @type {CSSStyleSheet} */ (styleEl.sheet).insertRule(
-  '[interestfor]::interest-button { content: "" !important; }',
+  '[interestfor]::interest-button { content: "" !important; margin-inline-start: 0 !important; min-inline-size: 0 !important; min-block-size: 0 !important; inline-size: 0 !important; block-size: 0 !important; }',
 );
