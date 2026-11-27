@@ -11,7 +11,7 @@
     "eslint": "10.15.0",
     "eslint-config-upleveled": "11.0.3",
     "prettier": "3.10.1",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "devEngines": {
     "packageManager": {
